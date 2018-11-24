@@ -67,3 +67,106 @@ For an nginx configuration example see `nginx.conf.example`.
 
 ## Licences
 * Thanks to [Mark DiAngelo]() for the [Blop Sound](http://soundbible.com/2067-Blop.html)
+
+
+## 改造记录
+### 不按同一局域网IP分房间，改成所有网络同一房间
+原始server创建的房间数据结构：
+
+    { 
+        '45.64.10.121':
+       { '9c1224c9-f272-4b70-ac64-8e92bb2c68e5':
+            Peer {
+                socket: [WebSocket],
+                ip: '45.64.10.121',
+                id: '9c1224c9-f272-4b70-ac64-8e92bb2c68e5',
+                rtcSupported: true,
+                name: [Object],
+                timerId: [Timeout],
+                lastBeat: 1542954810497 
+            },
+         '969e6457-13bc-4d6f-a9bc-325b56b06e03; Hm_lvt_4fc61405bfdfe04b08a053cbd3e5971a=1542626590; Hm_lpvt_4fc61405bfdfe04b08a053cbd3e5971a=1542954531':
+            Peer {
+                socket: [WebSocket],
+                ip: '45.64.10.121',
+                id: '969e6457-13bc-4d6f-a9bc-325b56b06e03; Hm_lvt_4fc61405bfdfe04b08a053cbd3e5971a=1542626590; Hm_lpvt_4fc61405bfdfe04b08a053cbd3e5971a=1542954531',
+                rtcSupported: true,
+                name: [Object],
+                timerId: 0,
+                lastBeat: 1542954810663 
+            } 
+        },
+      '45.64.22.107':
+       { '3f0fd73f-d222-4ee0-b1f3-4f7456def4a6; Hm_lvt_4fc61405bfdfe04b08a053cbd3e5971a=1542596007; Hm_lpvt_4fc61405bfdfe04b08a053cbd3e5971a=1542596079':
+            Peer {
+                socket: [WebSocket],
+                ip: '45.64.22.107',
+                id: '3f0fd73f-d222-4ee0-b1f3-4f7456def4a6; Hm_lvt_4fc61405bfdfe04b08a053cbd3e5971a=1542596007; Hm_lpvt_4fc61405bfdfe04b08a053cbd3e5971a=1542596079',
+                rtcSupported: true,
+                name: [Object],
+                timerId: [Timeout],
+                lastBeat: 1542954805219 
+            } 
+        } 
+    }
+
+以上数据结构表示：当前server共创建了两个房间，第一个房间也就是`45.64.10.121`网络下存在两个设备。
+
+因此，改造方式：
+    1. 只创建一个默认房间`127.0.0.1`
+    2. 随后进来的每台设备，同一进默认房间，不再区分ip进房
+
+
+
+## 启动server
+
+使用forever模块持久运行js
+
+    npm install forever -g
+    forever start index.js
+
+Ps.可以指定app.js中的日志信息和错误日志输出文件，-o 就是console.log输出的信息，-e 就是console.error输出的信息：
+
+    forever start -o out.log -e err.log index.js 
+
+forever常用参数：
+
+    start               Start SCRIPT as a daemon
+    stop                Stop the daemon SCRIPT by Id|Uid|Pid|Index|Script
+    stopall             Stop all running forever scripts
+    restart             Restart the daemon SCRIPT
+    restartall          Restart all running forever scripts
+    list                List all running forever scripts
+
+
+## nginx 配置
+
+    server {
+        listen	     80;
+        root         /web/airdrop/client;
+        server_name  airdrop.susamko.com;
+    
+        access_log  /var/log/nginx/sites/airdrop.susamko.com;
+    
+        location / {
+            proxy_http_version 1.1;
+        }
+    
+        location /server {
+            # 代理    
+            proxy_pass http://localhost:3000/;
+            proxy_http_version 1.1;
+            # 升级为WebSocket协议
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header X-Forwarded-For $remote_addr;
+        }
+    
+        error_page 404 /404.html;
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+            root /usr/share/nginx/html;
+        }
+    }
+
+
