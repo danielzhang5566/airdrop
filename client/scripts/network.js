@@ -257,6 +257,7 @@ class RTCPeer extends Peer {
     }
 
     _onDescription(description) {
+        console.log('ICE: setLocalDescription')
         // description.sdp = description.sdp.replace('b=AS:30', 'b=AS:1638400');
         this._conn.setLocalDescription(description)
             .then(_ => this._sendSignal({ sdp: description }))
@@ -272,7 +273,9 @@ class RTCPeer extends Peer {
         if (!this._conn) this._connect(message.sender, false);
 
         if (message.sdp) {
-            this._conn.setRemoteDescription(new RTCSessionDescription(message.sdp))
+            console.log('ICE: setRemoteDescription')
+            // this._conn.setRemoteDescription(new RTCSessionDescription(message.sdp))
+            this._conn.setRemoteDescription(message.sdp)
                 .then( _ => this._conn.createAnswer())
                 .then(d => this._onDescription(d))
                 .catch(e => this._onError(e));
@@ -330,6 +333,7 @@ class RTCPeer extends Peer {
     _sendSignal(signal) {
         signal.type = 'signal';
         signal.to = this._peerId;
+        console.log('ICE: _sendSignal, send local description to server');
         this._server.send(signal);
     }
 
