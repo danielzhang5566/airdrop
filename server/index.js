@@ -77,6 +77,8 @@ class SnapdropServer {
 
         // add peer to room
         this._rooms[peer.ip][peer.id] = peer;
+
+        console.log('\npeer-joined', peer.id)
     }
 
     _leaveRoom(peer) {
@@ -158,6 +160,8 @@ class Peer {
         } else {
             this.ip = request.connection.remoteAddress;
         }
+        // 只开一个默认房间
+        this.ip  = '127.0.0.1'
     }
 
     _setPeerId(request) {
