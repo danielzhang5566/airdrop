@@ -142,11 +142,20 @@ forever常用参数：
 ## nginx 配置
 
     server {
-        listen	     80;
-        root         /web/airdrop/client;
-        server_name  airdrop.susamko.com;
     
-        access_log  /var/log/nginx/sites/airdrop.susamko.com;
+        listen 443;
+        ssl on;
+    
+        root         /xxx/airdrop/client;
+        server_name  xxx.com;
+        index index.html index.htm;
+    
+        ssl_certificate      cert/xxx.pem;
+        ssl_certificate_key  cert/xxx.key;
+        ssl_session_timeout 5m;
+        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        ssl_prefer_server_ciphers on;
     
         location / {
             proxy_http_version 1.1;
@@ -162,11 +171,18 @@ forever常用参数：
             proxy_set_header X-Forwarded-For $remote_addr;
         }
     
+        access_log  /var/log/nginx/sites/airdrop.susamko.com;
         error_page 404 /404.html;
         error_page 500 502 503 504 /50x.html;
         location = /50x.html {
             root /usr/share/nginx/html;
         }
+    
     }
-
-
+    
+    server {
+        listen	 80;
+        server_name  xxx.com;
+    
+        rewrite ^(.*)$ https://${server_name}$1 permanent; 
+    }
