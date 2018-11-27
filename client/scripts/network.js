@@ -188,7 +188,7 @@ class Peer {
         const progress = this._digester.progress;
         this._onDownloadProgress(progress);
 
-        // occasionally notify sender about our progress 
+        // occasionally notify sender about our progress
         if (progress - this._lastProgress < 0.01) return;
         this._lastProgress = progress;
         this._sendProgress(progress);
@@ -265,8 +265,12 @@ class RTCPeer extends Peer {
     }
 
     _onIceCandidate(event) {
-        if (!event.candidate) return;
-        this._sendSignal({ ice: event.candidate });
+        const ice = event.candidate
+        if (!ice) return;
+        // 有四种类型的 UDP candidates:
+        // 1. host(直接ip) 2. prflx(对称NAT) 3. srflx(STUN) 4. relay(TURN)
+        console.log('ICE: _onIceCandidate', ice.candidate)
+        this._sendSignal({ ice });
     }
 
     onServerMessage(message) {
@@ -505,13 +509,20 @@ class Events {
     }
 }
 
-
+// STUN和TURN服务的作用主要处理打洞与转发，配合完成ICE协议。
+// ICE：一种新的媒体会话信令穿透NAT/FW的解决方案--交互式连通建立方式
+// STUN：穿透NAT提供工具，提供client真实地址，搭建 Peer To Peer直连通道
+// TURN：使用中继穿透NAT:STUN的扩展，中间转播的形式，当P2P失败时进行转发
+// TURN 是 STUN 的fallback
 RTCPeer.config = {
-    'iceServers': [{
-        urls: 'stun:stun.l.google.com:19302'
-    }, {
-        urls: 'turn:192.158.29.39:3478?transport=tcp',
-        credential: 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-        username: '28224511:1379330808'
-    }]
+    'iceServers': [
+        {
+            urls: 'stun:numb.viagenie.ca:3478'
+        },
+        {
+            url: 'turn:numb.viagenie.ca:3478',
+            username: 'zeakhold@gmail.com',
+            credential: '123hahaha'
+        }
+    ]
 }
