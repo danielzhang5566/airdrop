@@ -517,12 +517,12 @@ class Events {
 RTCPeer.config = {
     'iceServers': [
         {
-            urls: 'stun:numb.viagenie.ca:3478'
+            urls: 'stun:airdrop.susamko.com:3478'
         },
         {
-            url: 'turn:numb.viagenie.ca:3478',
-            username: 'zeakhold@gmail.com',
-            credential: '123hahaha'
+            url: 'turn:airdrop.susamko.com:3478',
+            username: 'admin',
+            credential: '123456'
         }
     ]
 }
